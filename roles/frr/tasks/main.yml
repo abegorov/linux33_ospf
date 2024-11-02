@@ -1,0 +1,42 @@
+---
+- name: Install FRR RPM repository
+  ansible.builtin.dnf:
+    name: https://rpm.frrouting.org/repo/frr-9-repo-1-0.el9.noarch.rpm
+    disable_gpg_check: true
+    state: present
+
+- name: Install FRR
+  ansible.builtin.dnf:
+    name:
+      - frr
+      - frr-pythontools
+    state: present
+
+- name: Configure FRR daemons
+  ansible.builtin.lineinfile:
+    path: /etc/frr/daemons
+    regexp: (^{{ item.key | ansible.builtin.regex_escape }}=)
+    backrefs: true
+    line: \g<1>{{ item.value }}
+    owner: frr
+    group: frr
+    mode: '0750'
+  loop: '{{ frr_daemons | ansible.builtin.dict2items }}'
+  notify: Reload frr service
+
+- name: Configure FRR service
+  ansible.builtin.template:
+    src: '{{ frr_config_template }}'
+    dest: /etc/frr/frr.conf
+    lstrip_blocks: true
+    owner: frr
+    group: frr
+    mode: '0600'
+  notify: Reload frr service
+
+- name: Enable and start FRR service
+  ansible.builtin.systemd_service:
+    name: frr.service
+    enabled: true
+    state: started
+  ignore_errors: '{{ ansible_check_mode }}'

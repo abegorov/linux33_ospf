@@ -1,0 +1,21 @@
+---
+sysctl_conf:
+  net.ipv4.ip_forward: 1
+  net.ipv4.conf.eth2.rp_filter: 0
+  net.ipv4.conf.eth3.rp_filter: 0
+
+frr_daemons:
+  ospfd: 'yes'
+
+frr_interfaces: ['eth1', 'eth2', 'eth3']
+frr_ospf_iface_area: {eth1: 0, eth2: 0, eth3: 0}
+frr_ospf_iface_cost: {}
+frr_ospf_passive: ['eth1']
+frr_ospf_routerid: '{{ nmcli_connections |
+  selectattr("ifname", "eq", "eth1") | map(attribute="ip4") |
+  ansible.utils.ipaddr("address") | first }}'
+
+frr_keychain_ospf0: '{{ lookup("ansible.builtin.password",
+  "passwords/frr_keychain_ospf0.txt") }}'
+
+frr_config_template: ospf.conf.j2

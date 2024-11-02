@@ -1,0 +1,34 @@
+!
+frr version 9.1.2
+frr defaults traditional
+!
+key chain ospf
+  key 0
+    cryptographic-algorithm hmac-sha-256
+    key-string {{ frr_keychain_ospf0 }}
+  exit
+exit
+!
+{% for iface in frr_interfaces %}
+interface {{ iface }}
+  {% if iface in frr_ospf_iface_area %}
+  {% set ospf_area = frr_ospf_iface_area[iface] %}
+  ip ospf area {{ ospf_area }}
+    {% if iface in frr_ospf_passive %}
+  ip ospf passive
+    {% else %}
+  ip ospf authentication key-chain ospf
+      {% if iface in frr_ospf_iface_cost %}
+  ip ospf cost {{ frr_ospf_iface_cost[iface] }}
+      {% endif %}
+  ip ospf dead-interval minimal hello-multiplier 4
+    {% endif %}
+  {% endif %}
+exit
+!
+{% endfor %}
+router ospf
+  ospf router-id {{ frr_ospf_routerid }}
+exit
+!
+end

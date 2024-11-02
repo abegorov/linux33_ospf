@@ -1,0 +1,14 @@
+---
+nmcli_connections:
+  - conn_name: net2
+    ifname: eth1
+    ip4: '192.168.20.1/24'
+  - conn_name: r1-r2
+    ifname: eth2
+    ip4: '10.0.10.2/30'
+  - conn_name: r2-r3
+    ifname: eth3
+    ip4: '10.0.11.2/30'
+
+frr_ospf_iface_cost:
+  eth2: 10000
